@@ -22,6 +22,14 @@ public class BossController : MonoBehaviour
     [SerializeField] private float attackCooldown = 3f;
     private float attackTimer;
 
+    [Header("Angry Mode Settings")]
+    [SerializeField] private int angryHpThreshold = 5;
+    [SerializeField] private float angryAttackCooldown = 1.5f;
+    [SerializeField, Range(0f, 1f)] private float shootAllChance = 0.4f;
+
+    private bool isAngry;
+
+
     [Header("Damage Flash")]
     [SerializeField] private float flashDuration = 0.2f;
     [SerializeField] private Color flashColor = Color.red;
@@ -104,7 +112,20 @@ public class BossController : MonoBehaviour
 
     private void Attack()
     {
-        List<Transform> attackPoints = GetAttackPositions(2);
+        bool shootAll = isAngry && Random.value < shootAllChance;
+
+        List<Transform> attackPoints;
+
+        if (shootAll)
+        {
+            // Shoot from ALL attack positions
+            attackPoints = new List<Transform>(teleportPoints);
+        }
+        else
+        {
+            // Normal behaviour (2 random positions)
+            attackPoints = GetAttackPositions(2);
+        }
 
         for (int i = 0; i < attackPoints.Count; i++)
         {
@@ -131,6 +152,7 @@ public class BossController : MonoBehaviour
             }
         }
     }
+
 
     // ================= WEAK SPOT LOGIC =================
 
@@ -210,8 +232,13 @@ public class BossController : MonoBehaviour
     public void Damage()
     {
         currentHp--;
-
         currentHp = Mathf.Clamp(currentHp, 0, maxHealth);
+
+        // ENTER ANGRY MODE
+        if (!isAngry && currentHp <= angryHpThreshold)
+        {
+            EnterAngryMode();
+        }
 
         UpdateHealthUI();
 
@@ -225,6 +252,15 @@ public class BossController : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    void EnterAngryMode()
+    {
+        isAngry = true;
+        attackCooldown = angryAttackCooldown;
+
+        Debug.Log("Boss entered ANGRY MODE");
+    }
+
 
     void UpdateHealthUI()
     {
