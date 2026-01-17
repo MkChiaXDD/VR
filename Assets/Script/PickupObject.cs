@@ -11,18 +11,9 @@ public class PickupObject : MonoBehaviour
     private Transform followTarget;
     private Collider col;
 
-    private PlayerBallSpawner spawner;
-    private BallPool ballPool;
-
     void Awake()
     {
         col = GetComponent<Collider>();
-    }
-
-    void Start()
-    {
-        spawner = FindFirstObjectByType<PlayerBallSpawner>();
-        ballPool = FindFirstObjectByType<BallPool>(); // IMPORTANT
     }
 
     void Update()
@@ -36,8 +27,6 @@ public class PickupObject : MonoBehaviour
     void OnPointerClick()
     {
         if (isHeld) return;
-
-        spawner?.OnBallPickedUp(gameObject);
 
         FindFirstObjectByType<PlayerPickup>().PickUp(this);
     }
@@ -56,6 +45,7 @@ public class PickupObject : MonoBehaviour
         isHeld = false;
         followTarget = null;
 
+        // SNAP TO SHOOT POINT
         transform.position = shootPoint.position;
 
         StartCoroutine(ThrowRoutine(direction.normalized));
@@ -72,18 +62,6 @@ public class PickupObject : MonoBehaviour
             yield return null;
         }
 
-        FinishBall();
-    }
-
-    // ================= FINISH =================
-    void FinishBall()
-    {
-        spawner?.OnBallFinished(gameObject);
-
-        // Reset interaction
-        gameObject.layer = 6; // Interactive layer again
-        if (col) col.enabled = true;
-
-        ballPool.ReturnObject(gameObject);
+        Destroy(gameObject); // or return to pool
     }
 }
