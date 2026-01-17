@@ -16,6 +16,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount = 1)
     {
+        Debug.Log("Player Hit");
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, hearts.Count);
 
