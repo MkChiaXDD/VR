@@ -11,7 +11,7 @@ public class BossWeakSpotHit : MonoBehaviour
 
     void OnPointerClick()
     {
-        boss.OnWeakSpotHit(gameObject);
+        //boss.OnWeakSpotHit(gameObject);
     }
 
     void OnTriggerEnter(Collider other)

@@ -44,6 +44,7 @@ public class PickupObject : MonoBehaviour
     {
         isHeld = false;
         followTarget = null;
+        col.enabled = true;
 
         // SNAP TO SHOOT POINT
         transform.position = shootPoint.position;
