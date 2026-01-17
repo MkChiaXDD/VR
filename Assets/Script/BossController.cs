@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BossController : MonoBehaviour
 {
@@ -29,6 +30,9 @@ public class BossController : MonoBehaviour
     private Color originalColor;
     private Coroutine flashRoutine;
 
+    [Header("UI")]
+    [SerializeField] private Image healthFill;
+
     // ================= WEAK SPOTS =================
 
     [Header("Weak Spots")]
@@ -52,6 +56,8 @@ public class BossController : MonoBehaviour
 
         bossRenderer = GetComponentInChildren<Renderer>();
         originalColor = bossRenderer.material.color;
+
+        UpdateHealthUI();
 
         // Make sure all weak spots start OFF
         foreach (GameObject ws in weakSpots)
@@ -205,7 +211,10 @@ public class BossController : MonoBehaviour
     {
         currentHp--;
 
-        // restart flash if already running
+        currentHp = Mathf.Clamp(currentHp, 0, maxHealth);
+
+        UpdateHealthUI();
+
         if (flashRoutine != null)
             StopCoroutine(flashRoutine);
 
@@ -217,6 +226,13 @@ public class BossController : MonoBehaviour
         }
     }
 
+    void UpdateHealthUI()
+    {
+        if (healthFill == null) return;
+
+        float normalizedHealth = (float)currentHp / maxHealth;
+        healthFill.fillAmount = normalizedHealth;
+    }
 
     IEnumerator DamageFlash()
     {

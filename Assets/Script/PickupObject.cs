@@ -3,7 +3,7 @@ using System.Collections;
 
 public class PickupObject : MonoBehaviour
 {
-    [Header("Throw Settings")]
+    [Header("Throw")]
     [SerializeField] private float throwSpeed = 6f;
     [SerializeField] private float throwDuration = 1.2f;
 
@@ -40,10 +40,13 @@ public class PickupObject : MonoBehaviour
         if (col) col.enabled = false;
     }
 
-    public void Throw(Vector3 direction)
+    public void Throw(Vector3 direction, Transform shootPoint)
     {
         isHeld = false;
         followTarget = null;
+
+        // SNAP TO SHOOT POINT
+        transform.position = shootPoint.position;
 
         StartCoroutine(ThrowRoutine(direction.normalized));
     }
@@ -59,7 +62,6 @@ public class PickupObject : MonoBehaviour
             yield return null;
         }
 
-        // TODO: hit boss or return to pool
-        Destroy(gameObject);
+        Destroy(gameObject); // or return to pool
     }
 }

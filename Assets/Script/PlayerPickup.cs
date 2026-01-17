@@ -2,18 +2,18 @@ using UnityEngine;
 
 public class PlayerPickup : MonoBehaviour
 {
-    [Header("Pickup")]
+    [Header("Hold & Fire Points")]
     [SerializeField] private Transform pickupPoint;
+    [SerializeField] private Transform shootPoint;
 
-    [Header("Double Tap Settings")]
+    [Header("Double Tap")]
     [SerializeField] private float doubleTapTime = 0.4f;
 
     private PickupObject heldObject;
 
     float lastTapTime;
     bool waitingForSecondTap;
-
-    bool lastTriggerState; // IMPORTANT
+    bool lastTriggerState;
 
     public bool IsHolding => heldObject != null;
 
@@ -21,7 +21,6 @@ public class PlayerPickup : MonoBehaviour
     {
         bool triggerNow = Google.XR.Cardboard.Api.IsTriggerPressed;
 
-        // Detect trigger DOWN (edge)
         if (triggerNow && !lastTriggerState)
         {
             HandleTap();
@@ -29,18 +28,14 @@ public class PlayerPickup : MonoBehaviour
 
         lastTriggerState = triggerNow;
 
-        // Timeout double tap
         if (waitingForSecondTap && Time.time - lastTapTime > doubleTapTime)
-        {
             waitingForSecondTap = false;
-        }
     }
 
     void HandleTap()
     {
         if (!IsHolding) return;
 
-        // FIRST TAP
         if (!waitingForSecondTap)
         {
             waitingForSecondTap = true;
@@ -48,7 +43,6 @@ public class PlayerPickup : MonoBehaviour
             return;
         }
 
-        // SECOND TAP
         if (Time.time - lastTapTime <= doubleTapTime)
         {
             ThrowHeldObject();
@@ -63,7 +57,6 @@ public class PlayerPickup : MonoBehaviour
         heldObject = obj;
         obj.OnPickUp(pickupPoint);
 
-        // RESET TAP STATE AFTER PICKUP
         waitingForSecondTap = false;
     }
 
@@ -71,7 +64,7 @@ public class PlayerPickup : MonoBehaviour
     {
         Vector3 dir = Camera.main.transform.forward;
 
-        heldObject.Throw(dir);
+        heldObject.Throw(dir, shootPoint);
         heldObject = null;
     }
 }

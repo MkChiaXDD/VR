@@ -13,6 +13,9 @@ public class VRGazeTimer : MonoBehaviour
     [Header("Bullet Settings")]
     [SerializeField] private float maxDistance = 30f;
 
+    [Header("Damage")]
+    [SerializeField] private int damage = 1;
+
     float timer;
     bool gazing;
     bool completed;
@@ -59,7 +62,7 @@ public class VRGazeTimer : MonoBehaviour
         // MOVE BULLET
         transform.position += direction * speed * Time.deltaTime;
 
-        // AUTO EXPIRE (distance)
+        // AUTO EXPIRE
         if (Vector3.Distance(startPos, transform.position) >= maxDistance)
         {
             ReturnToPool();
@@ -94,23 +97,35 @@ public class VRGazeTimer : MonoBehaviour
         ring.fillAmount = 0f;
     }
 
+    // ================= PLAYER HIT =================
+    void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Player")) return;
+
+        PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+        if (playerHealth != null)
+        {
+            playerHealth.TakeDamage(damage);
+        }
+
+        ReturnToPool();
+    }
+
     // ================= COMPLETE =================
     void CompleteInstant()
     {
         completed = true;
         gazing = false;
 
-        // REMOVE FROM INTERACTION IMMEDIATELY (Cardboard-safe)
         gameObject.layer = 0;
         if (col) col.enabled = false;
 
-        // RETURN NEXT FRAME
         StartCoroutine(ReturnNextFrame());
     }
 
     IEnumerator ReturnNextFrame()
     {
-        yield return null; // 1 frame delay for reticle safety
+        yield return null;
         ReturnToPool();
     }
 
