@@ -191,7 +191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ring: {fileID: 5923483794810463187}
-  gazeDuration: 2
+  gazeDuration: 1
   maxDistance: 30
   damage: 1
 --- !u!135 &5081872996572056801

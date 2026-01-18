@@ -56,6 +56,8 @@ public class BossController : MonoBehaviour
     private bool weakSpotActive;
     private bool coolingDown;
 
+    [SerializeField] private Animator anim;
+
     // ================= UNITY =================
 
     void Start()
@@ -88,7 +90,7 @@ public class BossController : MonoBehaviour
 
         if (attackTimer >= attackCooldown)
         {
-            Attack();
+            StartCoroutine(ThrowThenAttack());
             attackTimer = 0f;
         }
     }
@@ -108,6 +110,15 @@ public class BossController : MonoBehaviour
         }
 
         return chosen;
+    }
+
+    private IEnumerator ThrowThenAttack()
+    {
+        anim.SetTrigger("Throw");
+
+        yield return new WaitForSeconds(0.75f);
+
+        Attack();
     }
 
     private void Attack()

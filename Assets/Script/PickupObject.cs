@@ -9,11 +9,11 @@ public class PickupObject : MonoBehaviour
 
     private bool isHeld;
     private Transform followTarget;
-    private Collider col;
+    private BulletPool pool;
 
-    void Awake()
+    private void Start()
     {
-        col = GetComponent<Collider>();
+        pool = FindFirstObjectByType<BulletPool>();
     }
 
     void Update()
@@ -28,8 +28,12 @@ public class PickupObject : MonoBehaviour
     {
         if (isHeld) return;
 
+        FindFirstObjectByType<PlayerBallSpawner>()
+            ?.OnBallPickedUp(gameObject);
+
         FindFirstObjectByType<PlayerPickup>().PickUp(this);
     }
+
 
     public void OnPickUp(Transform pickupPoint)
     {
@@ -37,14 +41,12 @@ public class PickupObject : MonoBehaviour
         followTarget = pickupPoint;
 
         gameObject.layer = 0;
-        if (col) col.enabled = false;
     }
 
     public void Throw(Vector3 direction, Transform shootPoint)
     {
         isHeld = false;
         followTarget = null;
-        col.enabled = true;
 
         // SNAP TO SHOOT POINT
         transform.position = shootPoint.position;
@@ -63,6 +65,16 @@ public class PickupObject : MonoBehaviour
             yield return null;
         }
 
-        Destroy(gameObject); // or return to pool
+        gameObject.layer = 6;
+        pool.ReturnObject(gameObject);
     }
+
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if (other.CompareTag("Weak"))
+    //    {
+    //        //Return to pool
+    //        pool.ReturnObject(gameObject);
+    //    }
+    //}
 }
