@@ -93,6 +93,7 @@ public class BossController : MonoBehaviour
         }
     }
 
+
     // ================= ATTACK LOGIC =================
 
     void HandleAttacks()
@@ -280,6 +281,16 @@ public class BossController : MonoBehaviour
     {
         isAngry = true;
         attackCooldown = angryAttackCooldown;
+
+        if (angryAura != null)
+        {
+            angryAura.Play(true);
+        }
+
+        if (angryAura2 != null)
+        {
+            angryAura2.Play(true);
+        }
 
         Debug.Log("Boss entered ANGRY MODE");
     }
