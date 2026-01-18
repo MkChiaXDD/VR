@@ -58,7 +58,7 @@ public class VRGazeTimer : MonoBehaviour
         gameObject.layer = 6; // Interactive
         if (col) col.enabled = true;
 
-        rend.material.color = Color.white;
+        rend.material.color = Color.red;
     }
 
     // ================= UPDATE =================
