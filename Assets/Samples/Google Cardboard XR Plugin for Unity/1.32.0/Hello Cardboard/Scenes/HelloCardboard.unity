@@ -2530,8 +2530,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   floatHeight: 0.05
   floatSpeed: 2
-  swayAngle: 1
-  swaySpeed: 1
+  swayAngle: 2
+  swaySpeed: 2
 --- !u!1001 &1799306720
 PrefabInstance:
   m_ObjectHideFlags: 0
