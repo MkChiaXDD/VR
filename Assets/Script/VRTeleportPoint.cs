@@ -25,6 +25,8 @@ public class VRTeleportPoint : MonoBehaviour
 
     void OnPointerClick()
     {
+        AudioManager.Instance.PlaySFX("Tp");
         playerRoot.position = transform.position + positionOffset;
+        r.material.color = originalColor.color;
     }
 }

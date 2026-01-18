@@ -115,6 +115,7 @@ public class BossController : MonoBehaviour
     private IEnumerator ThrowThenAttack()
     {
         anim.SetTrigger("Throw");
+        AudioManager.Instance.PlaySFX("roar", 0.2f);
 
         yield return new WaitForSeconds(0.75f);
 

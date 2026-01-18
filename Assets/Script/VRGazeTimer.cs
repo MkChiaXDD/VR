@@ -27,6 +27,8 @@ public class VRGazeTimer : MonoBehaviour
     Collider col;
     TimerPool pool;
 
+    private Renderer rend;
+
     // ================= INIT =================
     public void Init(float speed, Vector3 direction, Transform startPos, TimerPool pool)
     {
@@ -41,6 +43,7 @@ public class VRGazeTimer : MonoBehaviour
     void Awake()
     {
         col = GetComponent<Collider>();
+        rend = GetComponent<Renderer>();
     }
 
     void OnEnable()
@@ -54,6 +57,8 @@ public class VRGazeTimer : MonoBehaviour
 
         gameObject.layer = 6; // Interactive
         if (col) col.enabled = true;
+
+        rend.material.color = Color.white;
     }
 
     // ================= UPDATE =================
@@ -86,15 +91,18 @@ public class VRGazeTimer : MonoBehaviour
     {
         if (completed) return;
 
+
         gazing = true;
         timer = 0f;
         ring.fillAmount = 0f;
+        rend.material.color = Color.yellow;
     }
 
     void OnPointerExit()
     {
         gazing = false;
         ring.fillAmount = 0f;
+        rend.material.color = Color.red;
     }
 
     // ================= PLAYER HIT =================
@@ -131,6 +139,7 @@ public class VRGazeTimer : MonoBehaviour
 
     void ReturnToPool()
     {
+        rend.material.color = Color.red;
         pool.ReturnObject(gameObject);
     }
 }

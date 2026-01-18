@@ -48,6 +48,7 @@ public class PickupObject : MonoBehaviour
         isHeld = false;
         followTarget = null;
 
+        AudioManager.Instance.PlaySFX("Throw");
         // SNAP TO SHOOT POINT
         transform.position = shootPoint.position;
 
