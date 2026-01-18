@@ -14,7 +14,7 @@ public class BossController : MonoBehaviour
 
     [Header("Health")]
     [SerializeField] private int maxHealth = 10;
-    private int currentHp;
+    public int currentHp;
 
     [Header("Attack Settings")]
     [SerializeField] private Transform firingPoint;
@@ -26,6 +26,8 @@ public class BossController : MonoBehaviour
     [SerializeField] private int angryHpThreshold = 5;
     [SerializeField] private float angryAttackCooldown = 1.5f;
     [SerializeField, Range(0f, 1f)] private float shootAllChance = 0.4f;
+    [SerializeField] private ParticleSystem angryAura;
+    [SerializeField] private ParticleSystem angryAura2;
 
     private bool isAngry;
 
@@ -80,6 +82,15 @@ public class BossController : MonoBehaviour
     {
         HandleAttacks();
         HandleWeakSpots();
+
+        if (isAngry)
+        {
+            if (angryAura.isPlaying == false && angryAura2.isPlaying == false)
+            {
+                angryAura.Play();
+                angryAura2.Play();
+            }
+        }
     }
 
     // ================= ATTACK LOGIC =================
