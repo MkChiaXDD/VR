@@ -7,15 +7,24 @@ public class ObjectPool : MonoBehaviour
     [SerializeField] private GameObject prefab;
     [SerializeField] private int poolSize = 5;
 
+    [Header("Hierarchy")]
+    [SerializeField] private Transform poolParent; // ? NEW
+
     private List<GameObject> pool = new List<GameObject>();
 
-    void Awake()
+    private void Awake()
     {
+        // If no parent assigned, create one automatically
+        if (poolParent == null)
+        {
+            GameObject parentObj = new GameObject($"{prefab.name}_Pool");
+            parentObj.transform.SetParent(transform);
+            poolParent = parentObj.transform;
+        }
+
         for (int i = 0; i < poolSize; i++)
         {
-            GameObject obj = Instantiate(prefab, transform);
-            obj.SetActive(false);
-            pool.Add(obj);
+            CreateNewObject();
         }
     }
 
@@ -30,14 +39,23 @@ public class ObjectPool : MonoBehaviour
             }
         }
 
-        // Optional: expand pool if needed
-        GameObject newObj = Instantiate(prefab, transform);
-        pool.Add(newObj);
-        return newObj;
+        // Expand pool if needed
+        return CreateNewObject(true);
     }
 
     public void ReturnObject(GameObject obj)
     {
         obj.SetActive(false);
+        obj.transform.SetParent(poolParent); // keep hierarchy clean
+    }
+
+    // ================= INTERNAL =================
+
+    private GameObject CreateNewObject(bool setActive = false)
+    {
+        GameObject obj = Instantiate(prefab, poolParent);
+        obj.SetActive(setActive);
+        pool.Add(obj);
+        return obj;
     }
 }

@@ -6,6 +6,8 @@ public class PlayerPickup : MonoBehaviour
     [SerializeField] private Transform pickupPoint;
     [SerializeField] private Transform shootPoint;
 
+    [SerializeField] private GameObject DoubleTapText;
+
     [Header("Double Tap")]
     [SerializeField] private float doubleTapTime = 0.4f;
 
@@ -16,6 +18,11 @@ public class PlayerPickup : MonoBehaviour
     bool lastTriggerState;
 
     public bool IsHolding => heldObject != null;
+
+    private void Start()
+    {
+        DoubleTapText.SetActive(false);
+    }
 
     void Update()
     {
@@ -56,14 +63,14 @@ public class PlayerPickup : MonoBehaviour
 
         heldObject = obj;
         obj.OnPickUp(pickupPoint);
-
+        DoubleTapText.SetActive(true);
         waitingForSecondTap = false;
     }
 
     void ThrowHeldObject()
     {
         Vector3 dir = Camera.main.transform.forward;
-
+        DoubleTapText.SetActive(false);
         heldObject.Throw(dir, shootPoint);
         heldObject = null;
     }
