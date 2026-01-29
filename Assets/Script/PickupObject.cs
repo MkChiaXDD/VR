@@ -11,9 +11,12 @@ public class PickupObject : MonoBehaviour
     [SerializeField] private Color hoverEmissionColor = Color.cyan;
     [SerializeField] private float hoverEmissionIntensity = 1.5f;
 
+    [SerializeField] private GameObject pickupCanvas;
+
     private bool isHeld;
     private Transform followTarget;
     private BulletPool pool;
+    private Rigidbody rb;
 
     // Highlight
     private Renderer rend;
@@ -27,6 +30,7 @@ public class PickupObject : MonoBehaviour
 
         // Grab renderer from child model (Rock)
         rend = GetComponentInChildren<Renderer>();
+        rb = GetComponent<Rigidbody>();
 
         if (rend != null)
         {
@@ -73,25 +77,21 @@ public class PickupObject : MonoBehaviour
     {
         isHeld = true;
         followTarget = pickupPoint;
-
+        pickupCanvas.SetActive(false);
         OnHoverExit(); // stop glow when picked up
         gameObject.layer = 0;
     }
 
-    public void Throw(Vector3 direction, Transform shootPoint)
+    public void Throw(Vector3 direction, float force)
     {
         isHeld = false;
         followTarget = null;
 
-        OnHoverExit();
-
-        AudioManager.Instance.PlaySFX("Throw");
-
-        // Snap to shoot point
-        transform.position = shootPoint.position;
-
-        StartCoroutine(ThrowRoutine(direction.normalized));
+        rb.useGravity = true;
+        rb.isKinematic = false;
+        rb.AddForce(direction * force, ForceMode.Impulse);
     }
+
 
     IEnumerator ThrowRoutine(Vector3 dir)
     {
@@ -105,6 +105,8 @@ public class PickupObject : MonoBehaviour
         }
 
         gameObject.layer = 6;
+        pickupCanvas.SetActive(true);
+        rb.useGravity = false;
         pool.ReturnObject(gameObject);
     }
 

@@ -5107,10 +5107,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34d9917c880dcd648aa8b361166329df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  throwSpeed: 15
-  throwDuration: 4
+  throwSpeed: 6
+  throwDuration: 5
   hoverEmissionColor: {r: 0, g: 1, b: 1, a: 1}
   hoverEmissionIntensity: 1.5
+  pickupCanvas: {fileID: 7106894677436231565}
 --- !u!54 &864080952542905757
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -1,27 +1,42 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class BossController : MonoBehaviour
 {
+    // ================= POOLS =================
     [Header("Pools")]
     [SerializeField] private HoverPool hoverPool;
     [SerializeField] private TimerPool timerPool;
 
+    // ================= ATTACK POSITIONS =================
     [Header("Attack Positions")]
     [SerializeField] private List<Transform> teleportPoints;
 
+    // ================= MOVEMENT =================
+    [Header("Movement")]
+    [SerializeField] private List<Transform> movePoints;
+    [SerializeField] private float moveSpeed = 2f;
+    [SerializeField] private int attacksBeforeMove = 3;
+
+    private int attackCount;
+    private Transform currentMoveTarget;
+    private bool isMoving;
+
+    // ================= HEALTH =================
     [Header("Health")]
     [SerializeField] private int maxHealth = 10;
     public int currentHp;
 
+    // ================= ATTACK SETTINGS =================
     [Header("Attack Settings")]
     [SerializeField] private Transform firingPoint;
     [SerializeField] private float bulletSpeed = 2f;
     [SerializeField] private float attackCooldown = 3f;
     private float attackTimer;
 
+    // ================= ANGRY MODE =================
     [Header("Angry Mode Settings")]
     [SerializeField] private int angryHpThreshold = 5;
     [SerializeField] private float angryAttackCooldown = 1.5f;
@@ -31,7 +46,7 @@ public class BossController : MonoBehaviour
 
     private bool isAngry;
 
-
+    // ================= DAMAGE FLASH =================
     [Header("Damage Flash")]
     [SerializeField] private float flashDuration = 0.2f;
     [SerializeField] private Color flashColor = Color.red;
@@ -40,28 +55,31 @@ public class BossController : MonoBehaviour
     private Color originalColor;
     private Coroutine flashRoutine;
 
+    // ================= UI =================
     [Header("UI")]
     [SerializeField] private Image healthFill;
 
-    // ================= WEAK SPOTS =================
+    // ================= FACING =================
+    [Header("Facing")]
+    [SerializeField] private Transform boatTarget;
+    [SerializeField] private float rotateSpeed = 2f;
+    [SerializeField] private Transform bossRoot;
 
+    // ================= WEAK SPOTS =================
     [Header("Weak Spots")]
     [SerializeField] private List<GameObject> weakSpots;
-
     [SerializeField] private float weakSpotActiveTime = 10f;
     [SerializeField] private float weakSpotCooldown = 5f;
 
     private GameObject currentWeakSpot;
     private float weakSpotTimer;
     private float cooldownTimer;
-
     private bool weakSpotActive;
     private bool coolingDown;
 
     [SerializeField] private Animator anim;
 
     // ================= UNITY =================
-
     void Start()
     {
         currentHp = maxHealth;
@@ -71,33 +89,37 @@ public class BossController : MonoBehaviour
 
         UpdateHealthUI();
 
-        // Make sure all weak spots start OFF
         foreach (GameObject ws in weakSpots)
-        {
             ws.SetActive(false);
-        }
     }
 
     void Update()
     {
-        HandleAttacks();
+        HandleMovement();
+
+        if (!isMoving)
+        {
+            FaceBoat();
+        }
+
+        if (!isMoving)
+            HandleAttacks();
+
         HandleWeakSpots();
 
         if (isAngry)
         {
-            if (angryAura.isPlaying == false && angryAura2.isPlaying == false)
-            {
-                angryAura.Play();
-                angryAura2.Play();
-            }
+            if (!angryAura.isPlaying) angryAura.Play();
+            if (!angryAura2.isPlaying) angryAura2.Play();
         }
     }
 
-
-    // ================= ATTACK LOGIC =================
-
+    // ================= ATTACK =================
     void HandleAttacks()
     {
+        // ❌ DO NOT ATTACK WHILE MOVING
+        if (isMoving) return;
+
         attackTimer += Time.deltaTime;
 
         if (attackTimer >= attackCooldown)
@@ -107,24 +129,8 @@ public class BossController : MonoBehaviour
         }
     }
 
-    private List<Transform> GetAttackPositions(int count)
-    {
-        List<Transform> available = new List<Transform>(teleportPoints);
-        List<Transform> chosen = new List<Transform>();
 
-        count = Mathf.Min(count, available.Count);
-
-        for (int i = 0; i < count; i++)
-        {
-            int index = Random.Range(0, available.Count);
-            chosen.Add(available[index]);
-            available.RemoveAt(index);
-        }
-
-        return chosen;
-    }
-
-    private IEnumerator ThrowThenAttack()
+    IEnumerator ThrowThenAttack()
     {
         anim.SetTrigger("Throw");
         AudioManager.Instance.PlaySFX("roar", 0.2f);
@@ -134,100 +140,193 @@ public class BossController : MonoBehaviour
         Attack();
     }
 
-    private void Attack()
+    void Attack()
     {
         bool shootAll = isAngry && Random.value < shootAllChance;
+        List<Transform> attackPoints = shootAll
+            ? new List<Transform>(teleportPoints)
+            : GetAttackPositions(2);
 
-        List<Transform> attackPoints;
-
-        if (shootAll)
+        foreach (Transform targetPoint in attackPoints)
         {
-            // Shoot from ALL attack positions
-            attackPoints = new List<Transform>(teleportPoints);
-        }
-        else
-        {
-            // Normal behaviour (2 random positions)
-            attackPoints = GetAttackPositions(2);
-        }
-
-        for (int i = 0; i < attackPoints.Count; i++)
-        {
-            Transform targetPoint = attackPoints[i];
-
-            Vector3 direction =
-                (targetPoint.position - firingPoint.position).normalized;
-
+            Vector3 dir = (targetPoint.position - firingPoint.position).normalized;
             int bulletType = Random.Range(0, 2);
 
             if (bulletType == 0)
             {
-                GameObject bullet = hoverPool.GetObject();
-                VRHover bulletScript = bullet.GetComponent<VRHover>();
-
-                bulletScript.Init(bulletSpeed, direction, firingPoint, hoverPool);
+                GameObject b = hoverPool.GetObject();
+                b.GetComponent<VRHover>().Init(bulletSpeed, dir, firingPoint, hoverPool);
             }
             else
             {
-                GameObject bullet = timerPool.GetObject();
-                VRGazeTimer bulletScript = bullet.GetComponent<VRGazeTimer>();
-
-                bulletScript.Init(bulletSpeed, direction, firingPoint, timerPool);
+                GameObject b = timerPool.GetObject();
+                b.GetComponent<VRGazeTimer>().Init(bulletSpeed, dir, firingPoint, timerPool);
             }
+        }
+
+        attackCount++;
+
+        if (attackCount >= attacksBeforeMove && !isMoving)
+        {
+            attackCount = 0;
+            StartCoroutine(DelayMove());
+        }
+    }
+
+    private IEnumerator DelayMove()
+    {
+        yield return new WaitForSeconds(2f);
+
+        ChooseNewMoveTarget();
+    }
+
+    List<Transform> GetAttackPositions(int count)
+    {
+        List<Transform> available = new List<Transform>(teleportPoints);
+        List<Transform> chosen = new List<Transform>();
+
+        for (int i = 0; i < Mathf.Min(count, available.Count); i++)
+        {
+            int idx = Random.Range(0, available.Count);
+            chosen.Add(available[idx]);
+            available.RemoveAt(idx);
+        }
+
+        return chosen;
+    }
+
+    // ================= MOVEMENT =================
+    void ChooseNewMoveTarget()
+    {
+        if (movePoints == null || movePoints.Count == 0 || isMoving)
+            return;
+
+        Transform candidate = movePoints[Random.Range(0, movePoints.Count)];
+
+        // 🔥 CHECK: already at this point?
+        Vector3 flatBossPos = new Vector3(
+            bossRoot.position.x,
+            0f,
+            bossRoot.position.z
+        );
+
+        Vector3 flatTargetPos = new Vector3(
+            candidate.position.x,
+            0f,
+            candidate.position.z
+        );
+
+        if (Vector3.Distance(flatBossPos, flatTargetPos) < 0.2f)
+        {
+            // Too close → ignore movement completely
+            return;
+        }
+
+        currentMoveTarget = candidate;
+        isMoving = true;
+
+        // ✅ ONLY trigger animation if actually moving
+        anim.SetTrigger("MoveStart");
+    }
+
+
+    void HandleMovement()
+    {
+        if (!isMoving || currentMoveTarget == null) return;
+
+        Vector3 targetPos = new Vector3(
+            currentMoveTarget.position.x,
+            bossRoot.position.y,
+            currentMoveTarget.position.z
+        );
+
+        // MOVE
+        bossRoot.position = Vector3.MoveTowards(
+            bossRoot.position,
+            targetPos,
+            moveSpeed * Time.deltaTime
+        );
+
+        // FACE MOVE DIRECTION
+        Vector3 moveDir = targetPos - bossRoot.position;
+        moveDir.y = 0f;
+
+        if (moveDir.sqrMagnitude > 0.001f)
+        {
+            Quaternion moveRot = Quaternion.LookRotation(moveDir);
+            bossRoot.rotation = Quaternion.Slerp(
+                bossRoot.rotation,
+                moveRot,
+                Time.deltaTime * rotateSpeed
+            );
+        }
+
+        // ARRIVAL CHECK
+        if (Vector3.Distance(bossRoot.position, targetPos) < 0.1f)
+        {
+            isMoving = false;
+            currentMoveTarget = null;
+
+            anim.SetTrigger("MoveStop");
         }
     }
 
 
-    // ================= WEAK SPOT LOGIC =================
+    // ================= FACING =================
+    void FaceBoat()
+    {
+        if (!boatTarget || !bossRoot) return;
 
+        Vector3 dir = boatTarget.position - bossRoot.position;
+        dir.y = 0f;
+
+        if (dir.sqrMagnitude < 0.01f) return;
+
+        Quaternion rot = Quaternion.LookRotation(dir);
+        bossRoot.rotation = Quaternion.Slerp(
+            bossRoot.rotation,
+            rot,
+            Time.deltaTime * rotateSpeed
+        );
+    }
+
+    // ================= WEAK SPOTS =================
     void HandleWeakSpots()
     {
-        // Weak spot active ? countdown
         if (weakSpotActive)
         {
             weakSpotTimer -= Time.deltaTime;
-
             if (weakSpotTimer <= 0f)
             {
                 DeactivateWeakSpot();
                 StartWeakSpotCooldown();
             }
         }
-        // Cooling down ? countdown
         else if (coolingDown)
         {
             cooldownTimer -= Time.deltaTime;
-
             if (cooldownTimer <= 0f)
             {
                 coolingDown = false;
                 ActivateRandomWeakSpot();
             }
         }
-        // Nothing active yet
-        else
-        {
-            ActivateRandomWeakSpot();
-        }
+        else ActivateRandomWeakSpot();
     }
 
     void ActivateRandomWeakSpot()
     {
         if (weakSpots.Count == 0) return;
 
-        int index = Random.Range(0, weakSpots.Count);
-        currentWeakSpot = weakSpots[index];
-
+        currentWeakSpot = weakSpots[Random.Range(0, weakSpots.Count)];
         currentWeakSpot.SetActive(true);
-
         weakSpotTimer = weakSpotActiveTime;
         weakSpotActive = true;
     }
 
     void DeactivateWeakSpot()
     {
-        if (currentWeakSpot == null) return;
-
+        if (!currentWeakSpot) return;
         currentWeakSpot.SetActive(false);
         currentWeakSpot = null;
         weakSpotActive = false;
@@ -239,11 +338,8 @@ public class BossController : MonoBehaviour
         cooldownTimer = weakSpotCooldown;
     }
 
-    // ================= CALLED BY WEAK SPOT =================
-
     public void OnWeakSpotHit(GameObject hitSpot)
     {
-        if (!weakSpotActive) return;
         if (hitSpot != currentWeakSpot) return;
 
         Damage();
@@ -252,19 +348,13 @@ public class BossController : MonoBehaviour
     }
 
     // ================= DAMAGE =================
-
     public void Damage()
     {
-        currentHp--;
-        currentHp = Mathf.Clamp(currentHp, 0, maxHealth);
-
-        // ENTER ANGRY MODE
-        if (!isAngry && currentHp <= angryHpThreshold)
-        {
-            EnterAngryMode();
-        }
-
+        currentHp = Mathf.Clamp(--currentHp, 0, maxHealth);
         UpdateHealthUI();
+
+        if (!isAngry && currentHp <= angryHpThreshold)
+            EnterAngryMode();
 
         if (flashRoutine != null)
             StopCoroutine(flashRoutine);
@@ -273,6 +363,7 @@ public class BossController : MonoBehaviour
 
         if (currentHp <= 0)
         {
+            FindFirstObjectByType<GameManager>()?.EndGame();
             Destroy(gameObject);
         }
     }
@@ -281,36 +372,20 @@ public class BossController : MonoBehaviour
     {
         isAngry = true;
         attackCooldown = angryAttackCooldown;
-
-        if (angryAura != null)
-        {
-            angryAura.Play(true);
-        }
-
-        if (angryAura2 != null)
-        {
-            angryAura2.Play(true);
-        }
-
-        Debug.Log("Boss entered ANGRY MODE");
+        angryAura?.Play();
+        angryAura2?.Play();
     }
-
 
     void UpdateHealthUI()
     {
-        if (healthFill == null) return;
-
-        float normalizedHealth = (float)currentHp / maxHealth;
-        healthFill.fillAmount = normalizedHealth;
+        if (healthFill)
+            healthFill.fillAmount = (float)currentHp / maxHealth;
     }
 
     IEnumerator DamageFlash()
     {
         bossRenderer.material.color = flashColor;
-
         yield return new WaitForSeconds(flashDuration);
-
         bossRenderer.material.color = originalColor;
     }
-
 }

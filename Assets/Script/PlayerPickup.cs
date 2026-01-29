@@ -1,4 +1,6 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerPickup : MonoBehaviour
 {
@@ -6,28 +8,35 @@ public class PlayerPickup : MonoBehaviour
     [SerializeField] private Transform pickupPoint;
     [SerializeField] private Transform shootPoint;
 
-    [SerializeField] private GameObject DoubleTapText;
+    [Header("UI")]
+    [SerializeField] private GameObject chargeUI;
+    [SerializeField] private Image forceFillImage;
+    [SerializeField] private TMP_Text text;
 
-    [Header("Double Tap")]
-    [SerializeField] private float doubleTapTime = 0.4f;
+    [Header("Charge Settings")]
+    [SerializeField] private float maxChargeTime = 1.5f;
+    [SerializeField] private float maxThrowForce = 12f;
 
     private PickupObject heldObject;
 
-    float lastTapTime;
-    bool waitingForSecondTap;
-    bool lastTriggerState;
+    private bool isCharging;
+    private float chargeTimer;
+
+    private bool lastTriggerState;
 
     public bool IsHolding => heldObject != null;
 
     private void Start()
     {
-        DoubleTapText.SetActive(false);
+        chargeUI.SetActive(false);
+        forceFillImage.fillAmount = 0f;
     }
 
     void Update()
     {
         bool triggerNow = Google.XR.Cardboard.Api.IsTriggerPressed;
 
+        // Detect TAP (press this frame)
         if (triggerNow && !lastTriggerState)
         {
             HandleTap();
@@ -35,26 +44,28 @@ public class PlayerPickup : MonoBehaviour
 
         lastTriggerState = triggerNow;
 
-        if (waitingForSecondTap && Time.time - lastTapTime > doubleTapTime)
-            waitingForSecondTap = false;
+        // Auto-charge over time (no holding)
+        if (isCharging)
+        {
+            chargeTimer += Time.deltaTime;
+            float normalized = Mathf.Clamp01(chargeTimer / maxChargeTime);
+            forceFillImage.fillAmount = normalized;
+        }
     }
 
     void HandleTap()
     {
         if (!IsHolding) return;
 
-        if (!waitingForSecondTap)
+        // FIRST TAP ? START CHARGING
+        if (!isCharging)
         {
-            waitingForSecondTap = true;
-            lastTapTime = Time.time;
+            StartCharging();
             return;
         }
 
-        if (Time.time - lastTapTime <= doubleTapTime)
-        {
-            ThrowHeldObject();
-            waitingForSecondTap = false;
-        }
+        // SECOND TAP ? THROW
+        ThrowChargedObject();
     }
 
     public void PickUp(PickupObject obj)
@@ -63,15 +74,44 @@ public class PlayerPickup : MonoBehaviour
 
         heldObject = obj;
         obj.OnPickUp(pickupPoint);
-        DoubleTapText.SetActive(true);
-        waitingForSecondTap = false;
+
+        chargeUI.SetActive(true);
+        forceFillImage.fillAmount = 0f;
+        chargeTimer = 0f;
+        isCharging = false;
+        text.text = "Tap to charge";
     }
 
-    void ThrowHeldObject()
+    // ---------------- CHARGE ----------------
+
+    void StartCharging()
     {
+        isCharging = true;
+        chargeTimer = 0f;
+        forceFillImage.fillAmount = 0f;
+        text.text = "Tap again to shoot";
+
+        AudioManager.Instance?.PlaySFX("ChargeStart");
+    }
+
+    // ---------------- THROW ----------------
+
+    void ThrowChargedObject()
+    {
+        isCharging = false;
+
+        float normalized = Mathf.Clamp01(chargeTimer / maxChargeTime);
+        float force = normalized * maxThrowForce;
+
         Vector3 dir = Camera.main.transform.forward;
-        DoubleTapText.SetActive(false);
-        heldObject.Throw(dir, shootPoint);
+
+        heldObject.Throw(dir, force);
         heldObject = null;
+
+        chargeTimer = 0f;
+        forceFillImage.fillAmount = 0f;
+        chargeUI.SetActive(false);
+
+        AudioManager.Instance?.PlaySFX("Throw");
     }
 }
