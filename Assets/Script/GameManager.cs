@@ -11,6 +11,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private float restartTime = 5f;
 
+    [Header("Win Game")]
+    [SerializeField] private GameObject loseCanvas;
+    [SerializeField] private TMP_Text timerText2;
+    private float timer2; 
+
     private float timer;
 
     [Header("Play particle")]
@@ -19,6 +24,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         endCanvas.SetActive(false);
+        loseCanvas.SetActive(false);
     }
 
     public void EndGame()
@@ -40,6 +46,33 @@ public class GameManager : MonoBehaviour
             if (timerText != null)
             {
                 timerText.text = $"Restarting in {Mathf.Ceil(timer)}";
+            }
+
+            yield return null; // IMPORTANT
+        }
+
+        SceneManager.LoadScene("HelloCardboard");
+    }
+
+    public void LoseGame()
+    {
+        StopAllCoroutines();
+        StartCoroutine(LoseGameRestart());
+    }
+
+    private IEnumerator LoseGameRestart()
+    {
+        loseCanvas.SetActive(true);
+        playerUI.SetActive(false);
+        timer2 = restartTime;
+
+        while (timer2 > 0f)
+        {
+            timer2 -= Time.deltaTime;
+
+            if (timerText2 != null)
+            {
+                timerText2.text = $"Restarting in {Mathf.Ceil(timer2)}";
             }
 
             yield return null; // IMPORTANT

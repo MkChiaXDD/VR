@@ -49,9 +49,6 @@ public class PlayerHealth : MonoBehaviour
     {
         Debug.Log("Player died");
 
-        // TODO:
-        // - Show game over
-        // - Restart scene
-        // - Disable controls
+        FindAnyObjectByType<GameManager>()?.LoseGame();
     }
 }
