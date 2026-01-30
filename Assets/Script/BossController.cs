@@ -227,6 +227,7 @@ public class BossController : MonoBehaviour
 
         // ✅ ONLY trigger animation if actually moving
         anim.SetTrigger("MoveStart");
+        AudioManager.Instance.PlaySFX("BossMove");
     }
 
 
@@ -359,6 +360,7 @@ public class BossController : MonoBehaviour
         if (flashRoutine != null)
             StopCoroutine(flashRoutine);
 
+        AudioManager.Instance.PlaySFX("BossDamage", 0.5f);
         flashRoutine = StartCoroutine(DamageFlash());
 
         if (currentHp <= 0)

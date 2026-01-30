@@ -20,6 +20,7 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, hearts.Count);
 
+        AudioManager.Instance.PlaySFX("PlayerHit");
         UpdateHearts();
 
         if (currentHealth <= 0)
