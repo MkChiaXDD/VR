@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
 
     private float timer;
 
+    [Header("Play particle")]
+    [SerializeField] private ExplodeParticlePool particle;
+
     void Start()
     {
         endCanvas.SetActive(false);
@@ -43,5 +46,20 @@ public class GameManager : MonoBehaviour
         }
 
         SceneManager.LoadScene("HelloCardboard");
+    }
+
+    public void PlayParticle(Vector3 position)
+    {
+        GameObject newParticle = particle.GetObject();
+        newParticle.transform.position = position;
+
+        ReturnParticleLaterlol(newParticle);
+    }
+
+    private IEnumerator ReturnParticleLaterlol(GameObject particle)
+    {
+        yield return new WaitForSeconds(2f);
+
+        this.particle.ReturnObject(particle);
     }
 }

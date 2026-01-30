@@ -64,6 +64,8 @@ public class VRHover : MonoBehaviour
 
     void OnPointerClick()
     {
+        AudioManager.Instance.PlaySFX("break");
+        FindFirstObjectByType<GameManager>()?.PlayParticle(transform.position);
         ReturnToPool();
     }
 

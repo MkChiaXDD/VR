@@ -128,6 +128,8 @@ public class VRGazeTimer : MonoBehaviour
         gameObject.layer = 0;
         if (col) col.enabled = false;
 
+        AudioManager.Instance.PlaySFX("break");
+        FindFirstObjectByType<GameManager>()?.PlayParticle(transform.position);
         StartCoroutine(ReturnNextFrame());
     }
 

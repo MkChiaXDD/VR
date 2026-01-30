@@ -6,9 +6,11 @@ public class VRTeleportPoint : MonoBehaviour
     Renderer r;
     private Material originalColor;
     [SerializeField] private Vector3 positionOffset = new Vector3(0f, 1.6f, 0f);
+    [SerializeField] private GameObject clickImage;
 
     void Start()
     {
+        clickImage.SetActive(false);
         r = GetComponent<Renderer>();
         originalColor = r.material;
     }
@@ -16,11 +18,13 @@ public class VRTeleportPoint : MonoBehaviour
     void OnPointerEnter()
     {
         r.material.color = Color.green;
+        clickImage.SetActive(true);
     }
 
     void OnPointerExit()
     {
         r.material.color = originalColor.color;
+        clickImage.SetActive(false);
     }
 
     void OnPointerClick()
@@ -28,5 +32,6 @@ public class VRTeleportPoint : MonoBehaviour
         AudioManager.Instance.PlaySFX("Tp");
         playerRoot.position = transform.position + positionOffset;
         r.material.color = originalColor.color;
+        clickImage.SetActive(true);
     }
 }

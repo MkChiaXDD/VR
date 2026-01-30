@@ -279,7 +279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b8c8f0c7a2cfb546a415c8900a7a269, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxDistance: 30
+  maxDistance: 60
   damage: 1
 --- !u!135 &3072973317838868139
 SphereCollider:

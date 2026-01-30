@@ -280,7 +280,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ring: {fileID: 5923483794810463187}
   gazeDuration: 0.5
-  maxDistance: 30
+  maxDistance: 60
   damage: 1
 --- !u!135 &5081872996572056801
 SphereCollider:
